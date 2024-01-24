@@ -2,6 +2,7 @@ import json
 from copy import copy
 import re
 import os
+import pdb
 
 os.chdir(r'C:\Users\andre\Documents\TEMPLATE HEROCLIX MAKER\Teste henrique')
 
@@ -11,9 +12,7 @@ with open('tdw.json', 'r') as file:
 with open('raw_template.json', 'r') as file:
     template = file.read()
 
-
 character = deck[0]
-
 
 collection_name = input("Qual a coleção?")
 
@@ -34,44 +33,17 @@ hcuspeedsymbol_to_ttsspeedsymbol = {
     'transport_wing': 'transport-wing',
 }
 
-
-
-replacements = {
-    "GUIDTEMP" : character['unit_id'],
-    "FIGURENAME" : f"{character['unit_id']} {character['name']}",
-    "SETNAME" : collection_name,
-    "DIMENSIONS" : character['dimensions'],
-    "RANGEOFCLIX" : character['unit_range'],
-    "HOWMANYTARGETS" : character['targets'],
-    #"TEAMABILITY1" : character['team_abilities'][0],
-    # "TEAMABILITY2" : character['team_abilities'][1],
-    "SPEEDSYMBOL" : character['speed_type'],
-    "ATTACKSYMBOL" : character['attack_type'],
-    "DEFENSESYMBOL" : character['defense_type'],
-    "DAMAGESYMBOL" : character['damage_type'],    
-}
-
-# for key, val in replacements.items():
-#     template = re.sub(f"\\b{key}\\b", val, template)
-
-
-# caso necessário realizar o sorting baseado no click_number
-# dial = character['dial'][0]
-
-import pdb
-
-
-
 hcutarget_to_ttstarget = {
     #convert speed powers to Tabletop Simulator equivalent.
-    '1': 'r1',
-    '2': 'r2',
-    '3': 'r4',
-    '4': 'r3',
+    '1': 'range1',
+    '2': 'range2',
+    '3': 'range4',
+    '4': 'range3',
 }
 
 hcuteams_to_ttsteams = {
     #convert team abilities to Tabletop Simulator equivalent.
+    'noaffiliation': 'noaffiliation',
     '2000_ad': '2000ad',
     'arachnos': 'arachnos',
     'ascendent': 'ascendent',
@@ -134,7 +106,6 @@ hcuteams_to_ttsteams = {
     'romulan_star_empire': 'romulanstarempire(awayteam)',
     'romulan_star_empire_tactics': 'romulanstarempire',
     'serpent_society': 'serpentsociety',
-    # Será que shield vai dar problema?
     'shield': 'unitshield',
     'sinister_syndicate': 'sinistersyndicate',
     'spider_man': 'spider-man',
@@ -157,7 +128,6 @@ hcuteams_to_ttsteams = {
     'united_federation': 'unitedfederationofplanets',
 }
 
-# 1. montar a lógica para definir as cores aqui.
 power_to_color = {
     #convert speed powers to Tabletop Simulator equivalent.
     'flurry': 'red',
@@ -211,41 +181,22 @@ power_to_color = {
     "special" : "special"
 }
 
-# 2. exceções
-
-# 3. as cores de contrastes do texto
-
+#Define the contrast of the text color and background color
 TEXTCOLORTOBLACK = ["white", "special", "red", "orange", "yellow", "lime", "green", "blue", "pink"]
 TEXTCOLORTOWHITE = ["dblue", "purple", "brown", "black", "gray"]
 TEXTCOLORTOCLEAR = "ko"
 
-
-# CLICKPOWERS = [[0 for x in range(12)] for x in range(4)]
-
-# if CLICKPOWERS[i][idx] in TEXTCOLORTOBLACK:
-#                 CLICKTXTCOLORS[i][idx] = "black"
-#             elif CLICKPOWERS[i][idx] in TEXTCOLORTOWHITE:
-#                 CLICKTXTCOLORS[i][idx] = "white"
-#             else:
-#                 CLICKTXTCOLORS[i][idx] = "clear"
-
-
-# 4. Converter as dimensões para texto (outra função)
-import pdb
-
-
+#Creates a dictionary based on current character
 def build_field_sequence(character, max_value, VALUE, field_name, field_color):
     seq_dictionary = dict()
 
-    # Preenche tudo com clear
+    #Fills all fields with default answers
     for idx in range(max_value):
         seq_dictionary[f"{VALUE}{idx + 1}"] = {
             "value" : "clear",
             "background_color" : TEXTCOLORTOCLEAR,
             "text_contrast_color" : "clear",
         }
-        # seq_dictionary[f"{VALUE}{idx + 1}"] = "clear"
-
 
     for dial in character['dial']:
 
@@ -274,6 +225,25 @@ def build_field_sequence(character, max_value, VALUE, field_name, field_color):
         }
     return seq_dictionary
 
+card_image = input(f"URL da carta de {character['unit_id']} {character['name']}: ") or "URLCARD"
+figure_image = input(f"URL da miniatura de {character['unit_id']} {character['name']}: ") or "URLFIGURE"
+
+characterinfo = {
+    "GUIDTEMP" : f"c{character['unit_id']}",
+    "FIGURENAME" : f"{character['unit_id']} {character['name']}",
+    "SETNAME" : collection_name,
+    "DIMENSIONS" : character['dimensions'],
+    "RANGEOFCLIX" : character['unit_range'],
+    "HOWMANYTARGETS" : character['targets'],
+    "TEAMABILITY1" : character['team_abilities'][0] if "team_abilities" in character else "noaffiliation",
+    "TEAMABILITY2" : character['team_abilities'][1] if "team_abilities" in character else "noaffiliation",
+    "SPEEDSYMBOL" : character['speed_type'],
+    "ATTACKSYMBOL" : character['attack_type'],
+    "DEFENSESYMBOL" : character['defense_type'],
+    "DAMAGESYMBOL" : character['damage_type'],
+    "CARDIMAGE" : card_image,
+    "FIGUREIMAGE" : figure_image   
+}
 
 MAX_VALUE = 26
 VALUE = "SPDCLK"
@@ -305,28 +275,45 @@ DAMCLK_SEQUENCE = build_field_sequence(character, MAX_VALUE, VALUE, FIELD_NAME, 
 with open('raw_template.json', 'r') as file:
     text = file.read()
 
+for key, val in characterinfo.items():
+    template = re.sub(f"\\b{str(key)}\\b", str(val), template)
+
+text = re.sub(r'\bGUIDTEMP\b', characterinfo["GUIDTEMP"], text)
+text = re.sub(r'\bFIGURENAME\b', characterinfo["FIGURENAME"], text)
+text = re.sub(r'\bSETNAME\b', characterinfo["SETNAME"], text)
+text = re.sub(r'\bCARDIMAGEURL\b', characterinfo["CARDIMAGE"], text)
+text = re.sub(r'\bFIGUREIMAGEURL\b', characterinfo["FIGUREIMAGE"], text)
+text = re.sub(r'\bDIMENSIONS\b', hcudimensions_to_ttsdimensions[characterinfo["DIMENSIONS"]], text)
+text = re.sub(r'\bRANGEOFCLIX\b', str(characterinfo["RANGEOFCLIX"]), text)
+text = re.sub(r'\bHOWMANYTARGETS\b', str(hcutarget_to_ttstarget[str(characterinfo["HOWMANYTARGETS"])]), text)
+text = re.sub(r'\bTEAMABILITY1\b', hcuteams_to_ttsteams[characterinfo["TEAMABILITY1"]], text)
+text = re.sub(r'\bTEAMABILITY2\b', hcuteams_to_ttsteams[characterinfo["TEAMABILITY2"]], text)
+text = re.sub(r'\bSPEEDSYMBOL\b', characterinfo["SPEEDSYMBOL"], text)
+text = re.sub(r'\bATTACKSYMBOL\b', characterinfo["ATTACKSYMBOL"], text)
+text = re.sub(r'\bDEFENSESYMBOL\b', characterinfo["DEFENSESYMBOL"], text)
+text = re.sub(r'\bDAMAGESYMBOL\b', characterinfo["DAMAGESYMBOL"], text)
+
 for idx, (key, val) in enumerate(SPDCLK_SEQUENCE.items()):
-    print(r'\bSPDCOLOR{}\b'.format(idx))
-    text = re.sub(r'\bSPDCLK{}\b', val["value"], text)
-    text = re.sub(r'\bSPEEDCOLOR{}\b'.format(idx), val["background_color"], text)
-    text = re.sub(r'\bSPEEDTEXTCOLOR{}\b', val["text_contrast_color"], text)
+    text = re.sub(r'\bSPDCLK{}\b'.format(idx+1), str(val["value"]), text)
+    text = re.sub(r'\bSPEEDCOLOR{}\b'.format(idx+1), val["background_color"], text)
+    text = re.sub(r'\bSPEEDTEXTCOLOR{}\b'.format(idx+1), val["text_contrast_color"], text)
 
 
 for idx, (key, val) in enumerate(ATKCLK_SEQUENCE.items()):
-    print(r'\bATKCOLOR{}\b'.format(idx))
-    text = re.sub(r'\bATTACKCLK{}\b', val["value"], text)
-    text = re.sub(r'\bATTACKCOLOR{}\b'.format(idx), val["background_color"], text)
-    text = re.sub(r'\bATTACKTEXTCOLOR{}\b', val["text_contrast_color"], text)
+    text = re.sub(r'\bATTACKCLK{}\b'.format(idx+1), str(val["value"]), text)
+    text = re.sub(r'\bATTACKCOLOR{}\b'.format(idx+1), val["background_color"], text)
+    text = re.sub(r'\bATTACKTEXTCOLOR{}\b'.format(idx+1), val["text_contrast_color"], text)
 
 
 for idx, (key, val) in enumerate(DEFCLK_SEQUENCE.items()):
-    print(r'\bDEFCOLOR{}\b'.format(idx))
-    text = re.sub(r'\bDEFCLK{}\b', val["value"], text)
-    text = re.sub(r'\bDEFCOLOR{}\b'.format(idx), val["background_color"], text)
-    text = re.sub(r'\bDEFTEXTCOLOR{}\b', val["text_contrast_color"], text)
+    text = re.sub(r'\bDEFCLK{}\b'.format(idx+1), str(val["value"]), text)
+    text = re.sub(r'\bDEFCOLOR{}\b'.format(idx+1), val["background_color"], text)
+    text = re.sub(r'\bDEFTEXTCOLOR{}\b'.format(idx+1), val["text_contrast_color"], text)
 
 for idx, (key, val) in enumerate(DAMCLK_SEQUENCE.items()):
-    print(r'\bDAMCOLOR{}\b'.format(idx))
-    text = re.sub(r'\bDAMCLK{}\b', val["value"], text)
-    text = re.sub(r'\bDAMCOLOR{}\b'.format(idx), val["background_color"], text)
-    text = re.sub(r'\bDAMTEXTCOLOR{}\b', val["text_contrast_color"], text)
+    text = re.sub(r'\bDAMCLK{}\b'.format(idx+1), str(val["value"]), text)
+    text = re.sub(r'\bDAMCOLOR{}\b'.format(idx+1), val["background_color"], text)
+    text = re.sub(r'\bDAMTEXTCOLOR{}\b'.format(idx+1), val["text_contrast_color"], text)
+
+with open(f"{characterinfo['FIGURENAME']}.json", 'w') as f:
+    f.write(text)
