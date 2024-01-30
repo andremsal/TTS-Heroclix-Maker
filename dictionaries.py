@@ -3,8 +3,8 @@ hcudimensions_to_ttsdimensions = {
     '1x1': '1.0,\\"scaleY\\":1.0,\\"scaleZ\\":1.0',
     '2x1': '2.0,\\"scaleY\\":2.0,\\"scaleZ\\":1.0',
     '2x2': '2.0,\\"scaleY\\":2.0,\\"scaleZ\\":2.0',
-    '4x2': '4.0,\\"scaleY\\":4.0,\\"scaleZ\\":2.0',
-    '6x3': '6.0,\\"scaleY\\":6.0,\\"scaleZ\\":3.0',
+    '2x4': '4.0,\\"scaleY\\":4.0,\\"scaleZ\\":2.0',
+    '3x6': '6.0,\\"scaleY\\":6.0,\\"scaleZ\\":3.0',
 }
 
 hcuspeedsymbol_to_ttsspeedsymbol = {

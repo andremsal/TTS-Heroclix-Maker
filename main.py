@@ -5,9 +5,11 @@ import os
 from dictionaries import *
 from functions import *
 
+#change directory to match your folder
 os.chdir(r'C:\Users\andre\Documents\TEMPLATE HEROCLIX MAKER\Teste henrique')
 
-with open('wkd24.json', 'r') as file:
+#change file name to match the set you are making
+with open('bctv.json', 'r') as file:
     deck = json.load(file)
 
 with open('raw_template.json', 'r') as file:
@@ -15,7 +17,7 @@ with open('raw_template.json', 'r') as file:
 
 collection_name = input("Qual a coleção?")
 
-for character in deck[8:]:
+for character in deck:
 
     try:
 
