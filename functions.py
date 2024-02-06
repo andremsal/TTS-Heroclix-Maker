@@ -1,8 +1,8 @@
 from dictionaries import *
 
 #Define the contrast of the text color and background color
-TEXTCOLORTOBLACK = ["white", "special", "red", "orange", "yellow", "lime", "green", "blue", "pink"]
-TEXTCOLORTOWHITE = ["dblue", "purple", "brown", "black", "gray"]
+TEXTCOLORTOBLACK = ["white", "special", "red", "orange", "yellow", "lime", "green", "blue", "pink", "blue-circle", "green-circle", "orange-circle"]
+TEXTCOLORTOWHITE = ["dblue", "purple", "brown", "black", "gray", "purple-circle", "brown-circle", "black-circle"]
 TEXTCOLORTOCLEAR = "ko"
 
 #Creates a dictionary based on current character

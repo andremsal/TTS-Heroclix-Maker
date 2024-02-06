@@ -110,6 +110,8 @@ hcuteams_to_ttsteams = {
     'wonder_woman_ally': 'wonderwoman',
     'skrulls': 'skrulls',
     'united_federation': 'unitedfederationofplanets',
+    'snowfall': 'snowfall',
+    'wwe': 'wwe',
 }
 
 power_to_color = {
@@ -162,6 +164,14 @@ power_to_color = {
     'perplex': 'brown',
     'outwit': 'black',
     'leadership': 'gray',
-    "special" : "special"
+    "special" : "special",
+    'nimble' : 'black-circle',
+    'stun': 'purple-circle',
+    'lightning_speed': 'brown-circle',
+    'flying_leap': 'orange-circle',
+    'slingshot': 'purple-circle',
+    'reversal': 'green-circle',
+    'slam': 'blue-circle',
+    'submission_hold': 'brown-circle',
 }
 
