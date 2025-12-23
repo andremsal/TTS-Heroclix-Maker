@@ -1,7 +1,8 @@
 import json
-from copy import copy
 import re
 import os
+import requests
+from copy import copy
 from dictionaries import *
 from functions import *
 
@@ -9,35 +10,63 @@ from functions import *
 current_dir = os.path.dirname(os.path.abspath(__file__))
 os.chdir(current_dir)
 
-#change file name to match the set you are making
-with open('wk25.json', 'r') as file:
-    deck = json.load(file)
+# Get collection name from user input
+collection_code = input("Qual o id da coleção (ex: wk25)? ")
+collection_name = input("Qual o nome da coleção (ex: Wizkids 2025)? ")
+search_url = f"https://hcunits.net/api/v1/units/?ext=json&search={collection_code}"
 
+print(f"Buscando unidades da coleção {collection_code}...")
+response = requests.get(search_url)
+if response.status_code != 200:
+    print(f"Erro ao acessar a API: Status {response.status_code}")
+    exit()
+
+data = response.json()
+
+if isinstance(data, dict) and 'results' in data:
+    all_units = data['results']
+elif isinstance(data, list):
+    all_units = data
+else:
+    print("Formato de resposta inesperado ou nenhum resultado encontrado.")
+    exit()
+
+# Filter units to get only characters
+character_ids = [u['id'] for u in all_units if u.get('type') == 'character' and u.get('set_id') == collection_code]
+print(f"Encontrados {len(character_ids)} / {len(all_units)} personagens do tipo 'character'.")
+
+# Open Tabletop Simulator Character Template
 with open('raw_template.json', 'r') as file:
     template = file.read()
 
-collection_name = input("Qual a coleção?")
-
-for character in deck:
+# Iterates Each Character
+for id in character_ids:
 
     try:
+        # Download unit details
+        print(f"Baixando detalhes da unidade: {id}...")
+        unit_url = f"https://hcunits.net/api/v1/units/{id}/?ext=json"
+        unit_data = requests.get(unit_url).json()
 
-        card_image = input(f"URL da carta de {character['unit_id']} {character['name']}: ") or "URLCARD"
-        figure_image = input(f"URL da miniatura de {character['unit_id']} {character['name']}: ") or "URLFIGURE"
+        # Prepare character with unit data
+        character = unit_data
+        card_image = input(f"URL da carta de {character['id']} {character['name']}: ") or "URLCARD"
+        figure_image = input(f"URL da miniatura de {character['id']} {character['name']}: ") or "URLFIGURE"
+        team_abilities = character.get('team_abilities', [])
 
         characterinfo = {
-            "GUIDTEMP" : f"c{character['unit_id']}",
-            "FIGURENAME" : f"{character['unit_id']} {character['name']}",
+            "GUIDTEMP" : f"c{character['id']}",
+            "FIGURENAME" : f"{character['id']} {character['name']}",
             "SETNAME" : collection_name,
             "DIMENSIONS" : character['dimensions'],
             "RANGEOFCLIX" : character['unit_range'],
             "HOWMANYTARGETS" : character['targets'],
-            "TEAMABILITY1" : character['team_abilities'][0] if 'team_abilities' in character else "noaffiliation",
-            "TEAMABILITY2" : character['team_abilities'][1] if ('team_abilities' in character) and (len(character['team_abilities']) >1) else "noaffiliation",
-            "SPEEDSYMBOL" : character['speed_type'],
-            "ATTACKSYMBOL" : character['attack_type'],
-            "DEFENSESYMBOL" : character['defense_type'],
-            "DAMAGESYMBOL" : character['damage_type'],
+            "TEAMABILITY1" : team_abilities[0] if len(team_abilities) > 0 else "noaffiliation",
+            "TEAMABILITY2" : team_abilities[1] if len(team_abilities) > 1 else "noaffiliation",
+            "SPEEDSYMBOL" : character['combat_symbols'][0],
+            "ATTACKSYMBOL" : character['combat_symbols'][1],
+            "DEFENSESYMBOL" : character['combat_symbols'][2],
+            "DAMAGESYMBOL" : character['combat_symbols'][3],
             "CARDIMAGE" : card_image,
             "FIGUREIMAGE" : figure_image   
         }
@@ -112,8 +141,10 @@ for character in deck:
             text = re.sub(r'\bDAMCOLOR{}\b'.format(idx+1), val["background_color"], text)
             text = re.sub(r'\bDAMTEXTCOLOR{}\b'.format(idx+1), val["text_contrast_color"], text)
 
+        # Save character file locally
         with open(f"{characterinfo['FIGURENAME']}.json", 'w') as f:
             f.write(text)
 
-    except:
-        pass
+    except Exception as e:
+        print(f"Erro ao processar {id}: {e}")
+        continue
