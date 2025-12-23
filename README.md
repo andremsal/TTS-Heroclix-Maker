@@ -6,6 +6,7 @@ A simple script to convert data from [HCunits API](https://hcunits.net/api/v1/un
 In the first part of the logic, the program will ask for two inputs:
 - Collection ID (e.g. _wk25_)
 - Collection Name (e.g. _Wizkids 2025_)
+
 In the second part of the logic, generates a list based on the previous inputs, filtering it to contain only `character` type units from the same `set_id` as the `Collection ID` input. Then, the program will iterate that list, asking for other two inputs for each character:
 - Card Image URL
 - Figure Image URL 
