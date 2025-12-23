@@ -13,26 +13,37 @@ os.chdir(current_dir)
 # Get collection name from user input
 collection_code = input("Qual o id da coleção (ex: wk25)? ")
 collection_name = input("Qual o nome da coleção (ex: Wizkids 2025)? ")
-search_url = f"https://hcunits.net/api/v1/units/?ext=json&search={collection_code}"
-
+search_url = f"https://hcunits.net/api/v1/units/?ext=json&set_id={collection_code}"
 print(f"Buscando unidades da coleção {collection_code}...")
-response = requests.get(search_url)
-if response.status_code != 200:
-    print(f"Erro ao acessar a API: Status {response.status_code}")
-    exit()
+all_units = []
 
-data = response.json()
+# Fetch all units from the API with pagination
+while search_url:
+    
+    # Make the API request
+    response = requests.get(search_url)
 
-if isinstance(data, dict) and 'results' in data:
-    all_units = data['results']
-elif isinstance(data, list):
-    all_units = data
-else:
-    print("Formato de resposta inesperado ou nenhum resultado encontrado.")
-    exit()
+    # Check for request errors
+    if response.status_code != 200:
+        print(f"Erro ao acessar a API: Status {response.status_code}")
+        exit()
+
+    # Parse response data
+    data = response.json()
+
+    # Determine if data is a list or contains 'results'
+    if isinstance(data, dict) and 'results' in data:
+        all_units.extend(data['results'])
+        search_url = data.get('next')
+    elif isinstance(data, list):
+        all_units.extend(data)
+        search_url = None
+    else:
+        print("Formato de resposta inesperado ou nenhum resultado encontrado.")
+        exit()
 
 # Filter units to get only characters
-character_ids = [u['id'] for u in all_units if u.get('type') == 'character' and u.get('set_id') == collection_code]
+character_ids = [u['id'] for u in all_units if u.get('type') == 'character']
 print(f"Encontrados {len(character_ids)} / {len(all_units)} personagens do tipo 'character'.")
 
 # Open Tabletop Simulator Character Template
@@ -54,6 +65,7 @@ for id in character_ids:
         figure_image = input(f"URL da miniatura de {character['id']} {character['name']}: ") or "URLFIGURE"
         team_abilities = character.get('team_abilities', [])
 
+        # Build character info dictionary
         characterinfo = {
             "GUIDTEMP" : f"c{character['id']}",
             "FIGURENAME" : f"{character['id']} {character['name']}",
@@ -71,39 +83,38 @@ for id in character_ids:
             "FIGUREIMAGE" : figure_image   
         }
 
+        # Build Speed Clicks sequence
         MAX_VALUE = 26
         VALUE = "SPDCLK"
         FIELD_NAME = 'speed_value'
         FIELD_COLOR = 'speed_power'
         SPDCLK_SEQUENCE = build_field_sequence(character, MAX_VALUE, VALUE, FIELD_NAME, FIELD_COLOR)
 
+        # Build Attack Clicks sequence
         MAX_VALUE = 26
         VALUE = "ATTACKCLK"
         FIELD_NAME = 'attack_value'
         FIELD_COLOR = 'attack_power'
-
         ATKCLK_SEQUENCE = build_field_sequence(character, MAX_VALUE, VALUE, FIELD_NAME, FIELD_COLOR)
-
+        
+        # Build Defense Clicks sequence
         MAX_VALUE = 26
         VALUE = "DEFCLK"
         FIELD_NAME = 'defense_value'
         FIELD_COLOR = 'defense_power'
-
         DEFCLK_SEQUENCE = build_field_sequence(character, MAX_VALUE, VALUE, FIELD_NAME, FIELD_COLOR)
 
+        # Build Damage Clicks sequence
         MAX_VALUE = 26
         VALUE = "DAMCLK"
         FIELD_NAME = 'damage_value'
         FIELD_COLOR = 'damage_power'
-
         DAMCLK_SEQUENCE = build_field_sequence(character, MAX_VALUE, VALUE, FIELD_NAME, FIELD_COLOR)
 
-        with open('raw_template.json', 'r') as file:
-            text = file.read()
+        # Set text to default template information
+        text = template
 
-        for key, val in characterinfo.items():
-            template = re.sub(f"\\b{str(key)}\\b", str(val), template)
-
+        # Perform replacements
         text = re.sub(r'\bGUIDTEMP\b', characterinfo["GUIDTEMP"], text)
         text = re.sub(r'\bFIGURENAME\b', characterinfo["FIGURENAME"], text)
         text = re.sub(r'\bSETNAME\b', characterinfo["SETNAME"], text)
@@ -145,6 +156,7 @@ for id in character_ids:
         with open(f"{characterinfo['FIGURENAME']}.json", 'w') as f:
             f.write(text)
 
+    # Handle exceptions
     except Exception as e:
         print(f"Erro ao processar {id}: {e}")
         continue
