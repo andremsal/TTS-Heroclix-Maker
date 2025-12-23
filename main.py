@@ -5,11 +5,12 @@ import os
 from dictionaries import *
 from functions import *
 
-#change directory to match your folder
-os.chdir(r'C:\Users\andre\Documents\TEMPLATE HEROCLIX MAKER\Teste henrique')
+# Ensure the script runs in its own directory
+current_dir = os.path.dirname(os.path.abspath(__file__))
+os.chdir(current_dir)
 
 #change file name to match the set you are making
-with open('wkm20.json', 'r') as file:
+with open('wk25.json', 'r') as file:
     deck = json.load(file)
 
 with open('raw_template.json', 'r') as file:
