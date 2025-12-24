@@ -1,6 +1,7 @@
 import requests
 import os
 import time
+from functions import *
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -13,7 +14,18 @@ os.chdir(current_dir)
 
 # Get collection name from user input
 collection_code = input("Qual o id da coleção (ex: wk25)? ")
-collection_name = input("Qual o nome da coleção (ex: Wizkids 2025)? ")
+collection_name = ""
+
+# Fetch collection name from API
+collection_name = fetch_collection_name(collection_code)
+
+# Security clause: if it fails, fill manually
+if not collection_name:
+    print(f"\n[AVISO] Não foi possível encontrar '{collection_code}' no site.")
+    collection_name = input(f"Digite o nome da coleção para '{collection_code}' manualmente: ").strip()
+else:
+    print(f"✅ Sucesso! '{collection_code}' mapeado para: {collection_name}")
+
 
 search_url = f"https://hcunits.net/api/v1/units/?ext=json&set_id={collection_code}"
 print(f"Buscando unidades da coleção {collection_code}...")
@@ -42,6 +54,18 @@ while search_url:
 
 print(f"Total de personagens encontrados: {len(character_ids)}")
 
+# Get starting position from user input
+temp_starting_position = str(input("Qual a posição inicial (ex: 1, 3, 5, 8, etc)? ")) or "0"
+starting_position = int(temp_starting_position)
+
+if starting_position <= 1:
+    starting_position = 0
+elif starting_position >= len(character_ids):
+    starting_position = len(character_ids) - 1
+else: starting_position -= 1
+
+print(f"Iniciando a partir da posição {starting_position + 1}...")
+
 # Create folder if it doesn't exist
 if not os.path.exists(collection_name):
     os.makedirs(collection_name)
@@ -52,7 +76,7 @@ driver = webdriver.Chrome()
 driver.set_window_size(1920, 1080)
 
 # Iterates Each Character
-for id in character_ids:
+for id in character_ids[starting_position:]:
     try:
         print(f"Processando personagem: {id}...")
         unit_url = f"https://hcunits.net/units/{id}"
@@ -90,7 +114,7 @@ for id in character_ids:
             card_paths.append(temp_path)
             print(f"Screenshot capturado: unitCard1")
         except Exception as e:
-            print(f"unitCard1 não encontrado para {id}")
+            print(f"{id} sem lado B")
         
         # Find and screenshot unitCard2 if it exists
         try:
@@ -101,7 +125,7 @@ for id in character_ids:
             card_paths.append(temp_path)
             print(f"Screenshot capturado: unitCard2")
         except Exception as e:
-            print(f"unitCard2 não encontrado para {id}")
+            print(f"{id} sem lado C")
         
         # Merge images if more than one card was captured
         if len(cards) > 1:
@@ -122,7 +146,7 @@ for id in character_ids:
                     x_offset += img.width
                 
                 # Save merged image
-                merged_path = os.path.join(collection_name, f"{id}_combined.png")
+                merged_path = os.path.join(collection_name, f"{id}.png")
                 merged_image.save(merged_path)
                 print(f"Imagens mescladas salvas: {merged_path}")
                 
