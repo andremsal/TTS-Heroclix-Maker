@@ -1,3 +1,5 @@
+import requests
+import re
 from dictionaries import *
 
 #Define the contrast of the text color and background color
@@ -19,8 +21,7 @@ def build_field_sequence(character, max_value, VALUE, field_name, field_color):
 
     for dial in character['dial']:
 
-        # Realiza o preenchimento em cima de clear com os valores em dial
-        # pdb.set_trace()
+        # Fills the field based on character stats
         try:
             if field_color in dial:
                 background_color = power_to_color[dial[field_color]]
@@ -43,3 +44,25 @@ def build_field_sequence(character, max_value, VALUE, field_name, field_color):
             "text_contrast_color" : text_contrast_color,
         }
     return seq_dictionary
+
+# Fetches collection name from collection code
+def fetch_collection_name(collection_code):
+    url = "https://storage.googleapis.com/static.hcunits.net/js/common/constants.js"
+    
+    try:
+        # Access the constants.js file
+        response = requests.get(url, timeout=15)
+        response.raise_for_status()
+        content = response.text
+
+        # Search for the collection name using regex
+        pattern = rf'"{collection_code}"\s*:\s*\{{[^}}]*?"name"\s*:\s*"([^"]+)"'
+        match = re.search(pattern, content, re.DOTALL)
+        
+        if match:
+            return match.group(1) # Return the found collection name
+            
+    except Exception as e:
+        print(f"⚠️ Erro de conexão: {e}")
+    
+    return ""

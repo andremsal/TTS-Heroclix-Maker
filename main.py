@@ -12,7 +12,18 @@ os.chdir(current_dir)
 
 # Get collection name from user input
 collection_code = input("Qual o id da coleção (ex: wk25)? ")
-collection_name = input("Qual o nome da coleção (ex: Wizkids 2025)? ")
+collection_name = ""
+
+# Fetch collection name from API
+collection_name = fetch_collection_name(collection_code)
+
+# Security clause: if it fails, fill manually
+if not collection_name:
+    print(f"\n[AVISO] Não foi possível encontrar '{collection_code}' no site.")
+    collection_name = input(f"Digite o nome da coleção para '{collection_code}' manualmente: ").strip()
+else:
+    print(f"✅ Sucesso! '{collection_code}' mapeado para: {collection_name}")
+
 search_url = f"https://hcunits.net/api/v1/units/?ext=json&set_id={collection_code}"
 print(f"Buscando unidades da coleção {collection_code}...")
 all_units = []
@@ -50,8 +61,20 @@ print(f"Encontrados {len(character_ids)} / {len(all_units)} personagens do tipo 
 with open('raw_template.json', 'r') as file:
     template = file.read()
 
+# Get starting position from user input
+temp_starting_position = str(input("Qual a posição inicial (ex: 1, 3, 5, 8, etc)? ")) or "0"
+starting_position = int(temp_starting_position)
+
+if starting_position <= 1:
+    starting_position = 0
+elif starting_position >= len(character_ids):
+    starting_position = len(character_ids) - 1
+else: starting_position -= 1
+
+print(f"Iniciando a partir da posição {starting_position + 1}...")
+
 # Iterates Each Character
-for id in character_ids:
+for id in character_ids[starting_position:]:
 
     try:
         # Download unit details
