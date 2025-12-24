@@ -1,17 +1,25 @@
 ## Summary
 
-A simple script to convert data from [HCunits API](https://hcunits.net/api/v1/units/) json files into Tabletop Simulator json files.
+A script that helps to convert [HCunits](https://hcunits.net/) data into Tabletop Simulator figures.
+It's main function is to convert data from [HCunits API](https://hcunits.net/api/v1/units/) json files into Tabletop Simulator json files.
+It can also get hcunit card renders and save them as images into a local folder using the `scraper.py` file.
 
-## How it Works
+## Main Function
 In the first part of the logic, the program will ask for two inputs:
 - Collection ID (e.g. _wk25_)
 - Collection Name (e.g. _Wizkids 2025_)
 
 In the second part of the logic, generates a list based on the previous inputs, filtering it to contain only `character` type units from the same `set_id` as the `Collection ID` input. Then, the program will iterate that list, asking for other two inputs for each character:
 - Card Image URL
-- Figure Image URL 
+- Figure Image URL
+
 At the end of each iteration, the program will export and save a ready-to-use `.json` file into the working directory.
 Simply paste the file into Tabletop Simulator `/Saved Objects` folder.
+
+## Scraper Function
+This is a more simple script that also asks for two inputs
+- Collection ID (e.g. _wk25_), which is used to fetch the units inside this collection.
+- Collection Name (e.g. _Wizkids 2025_), which is the folder name that is going to store this collection's file.
 
 ## Special Thanks
 Many thanks to `Henrique Mauler` and `Clay Wood` for the huge collaboration.
