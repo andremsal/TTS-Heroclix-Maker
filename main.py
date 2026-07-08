@@ -53,8 +53,8 @@ while search_url:
         print("Formato de resposta inesperado ou nenhum resultado encontrado.")
         exit()
 
-# Filter units to get only characters
-character_ids = [u['id'] for u in all_units if u.get('type') == 'character']
+# Filter units to get only characters and legacy cards
+character_ids = [u['id'] for u in all_units if u.get('type') in ('character', 'legacy_card')]
 print(f"Encontrados {len(character_ids)} / {len(all_units)} personagens do tipo 'character'.")
 
 # Open Tabletop Simulator Character Template
