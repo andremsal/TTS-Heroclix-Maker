@@ -63,10 +63,13 @@ else: starting_position -= 1
 
 print(f"Iniciando a partir da posição {starting_position + 1}...")
 
-# Create folder if it doesn't exist
-if not os.path.exists(collection_name):
-    os.makedirs(collection_name)
-    print(f"Pasta '{collection_name}' criada.")
+# Create the card-images folder if it doesn't exist and save collection inside it
+images_root = os.path.join(current_dir, "card-images")
+os.makedirs(images_root, exist_ok=True)
+
+collection_dir = os.path.join(images_root, collection_name)
+os.makedirs(collection_dir, exist_ok=True)
+print(f"Pasta da coleção '{collection_name}' criada em: {collection_dir}")
 
 # Initialize Selenium WebDriver
 driver = webdriver.Chrome()
@@ -94,7 +97,7 @@ for id in character_ids[starting_position:]:
         # Find and screenshot unitCard0
         try:
             unitCard0 = driver.find_element(By.ID, "unitCard0")
-            temp_path = os.path.join(collection_name, f"temp_{id}_0.png")
+            temp_path = os.path.join(collection_dir, f"temp_{id}_0.png")
             unitCard0.screenshot(temp_path)
             cards.append(temp_path)
             card_paths.append(temp_path)
@@ -105,7 +108,7 @@ for id in character_ids[starting_position:]:
         # Find and screenshot unitCard1 if it exists
         try:
             unitCard1 = driver.find_element(By.ID, "unitCard1")
-            temp_path = os.path.join(collection_name, f"temp_{id}_1.png")
+            temp_path = os.path.join(collection_dir, f"temp_{id}_1.png")
             unitCard1.screenshot(temp_path)
             cards.append(temp_path)
             card_paths.append(temp_path)
@@ -116,7 +119,7 @@ for id in character_ids[starting_position:]:
         # Find and screenshot unitCard2 if it exists
         try:
             unitCard2 = driver.find_element(By.ID, "unitCard2")
-            temp_path = os.path.join(collection_name, f"temp_{id}_2.png")
+            temp_path = os.path.join(collection_dir, f"temp_{id}_2.png")
             unitCard2.screenshot(temp_path)
             cards.append(temp_path)
             card_paths.append(temp_path)
@@ -143,7 +146,7 @@ for id in character_ids[starting_position:]:
                     x_offset += img.width
                 
                 # Save merged image
-                merged_path = os.path.join(collection_name, f"{id}.png")
+                merged_path = os.path.join(collection_dir, f"{id}.png")
                 merged_image.save(merged_path)
                 print(f"Imagens mescladas salvas: {merged_path}")
                 
@@ -156,7 +159,7 @@ for id in character_ids[starting_position:]:
                 print(f"Erro ao mesclar imagens para {id}: {e}")
         elif len(cards) == 1:
             # If only one card, rename it to final name
-            final_path = os.path.join(collection_name, f"{id}.png")
+            final_path = os.path.join(collection_dir, f"{id}.png")
             os.rename(cards[0], final_path)
             print(f"Imagem salva: {final_path}")
     
