@@ -24,37 +24,32 @@ if not collection_name:
 else:
     print(f"✅ Sucesso! '{collection_code}' mapeado para: {collection_name}")
 
-search_url = f"https://hcunits.net/api/v1/units/?ext=json&set_id={collection_code}"
+# --- CORREÇÃO: A API mudou. Agora a listagem de unidades de um set
+# vem toda de uma vez em /api/v1/sets/{set_id}/, dentro da chave "unit_list",
+# em vez de /api/v1/units/?set_id={set_id} paginado em "results".
+search_url = f"https://hcunits.net/api/v1/sets/{collection_code}/?ext=json"
+
 print(f"Buscando unidades da coleção {collection_code}...")
-all_units = []
 
-# Fetch all units from the API with pagination
-while search_url:
-    
-    # Make the API request
-    response = requests.get(search_url)
+response = requests.get(search_url)
 
-    # Check for request errors
-    if response.status_code != 200:
-        print(f"Erro ao acessar a API: Status {response.status_code}")
-        exit()
+# Check for request errors
+if response.status_code != 200:
+    print(f"Erro ao acessar a API: Status {response.status_code}")
+    exit()
 
-    # Parse response data
-    data = response.json()
+data = response.json()
 
-    # Determine if data is a list or contains 'results'
-    if isinstance(data, dict) and 'results' in data:
-        all_units.extend(data['results'])
-        search_url = data.get('next')
-    elif isinstance(data, list):
-        all_units.extend(data)
-        search_url = None
-    else:
-        print("Formato de resposta inesperado ou nenhum resultado encontrado.")
-        exit()
+# A resposta agora é um objeto único do set, com a lista de unidades em "unit_list"
+all_units = data.get('unit_list', [])
+
+if not all_units:
+    print(f"Nenhuma unidade encontrada para a coleção '{collection_code}'. Verifique se o código está correto.")
+    exit()
 
 # Filter units to get only characters and legacy cards
 character_ids = [u['id'] for u in all_units if u.get('type') in ('character', 'legacy_card')]
+
 print(f"Encontrados {len(character_ids)} / {len(all_units)} personagens do tipo 'character'.")
 
 # Open Tabletop Simulator Character Template
@@ -64,18 +59,17 @@ with open('raw_template.json', 'r') as file:
 # Get starting position from user input
 temp_starting_position = str(input("Qual a posição inicial (ex: 1, 3, 5, 8, etc)? ")) or "0"
 starting_position = int(temp_starting_position)
-
 if starting_position <= 1:
     starting_position = 0
 elif starting_position >= len(character_ids):
     starting_position = len(character_ids) - 1
-else: starting_position -= 1
+else:
+    starting_position -= 1
 
 print(f"Iniciando a partir da posição {starting_position + 1}...")
 
 # Iterates Each Character
 for id in character_ids[starting_position:]:
-
     try:
         # Download unit details
         print(f"Baixando detalhes da unidade: {id}...")
@@ -84,8 +78,10 @@ for id in character_ids[starting_position:]:
 
         # Prepare character with unit data
         character = unit_data
+
         card_image = input(f"URL da carta de {character['id']} {character['name']}: ") or "URLCARD"
         figure_image = input(f"URL da miniatura de {character['id']} {character['name']}: ") or "URLFIGURE"
+
         team_abilities = character.get('team_abilities', [])
 
         # Build character info dictionary
@@ -103,7 +99,7 @@ for id in character_ids[starting_position:]:
             "DEFENSESYMBOL" : character['combat_symbols'][2],
             "DAMAGESYMBOL" : character['combat_symbols'][3],
             "CARDIMAGE" : card_image,
-            "FIGUREIMAGE" : figure_image   
+            "FIGUREIMAGE" : figure_image
         }
 
         # Build Speed Clicks sequence
@@ -119,7 +115,7 @@ for id in character_ids[starting_position:]:
         FIELD_NAME = 'attack_value'
         FIELD_COLOR = 'attack_power'
         ATKCLK_SEQUENCE = build_field_sequence(character, MAX_VALUE, VALUE, FIELD_NAME, FIELD_COLOR)
-        
+
         # Build Defense Clicks sequence
         MAX_VALUE = 26
         VALUE = "DEFCLK"
@@ -158,12 +154,10 @@ for id in character_ids[starting_position:]:
             text = re.sub(r'\bSPEEDCOLOR{}\b'.format(idx+1), val["background_color"], text)
             text = re.sub(r'\bSPEEDTEXTCOLOR{}\b'.format(idx+1), val["text_contrast_color"], text)
 
-
         for idx, (key, val) in enumerate(ATKCLK_SEQUENCE.items()):
             text = re.sub(r'\bATTACKCLK{}\b'.format(idx+1), str(val["value"]), text)
             text = re.sub(r'\bATTACKCOLOR{}\b'.format(idx+1), val["background_color"], text)
             text = re.sub(r'\bATTACKTEXTCOLOR{}\b'.format(idx+1), val["text_contrast_color"], text)
-
 
         for idx, (key, val) in enumerate(DEFCLK_SEQUENCE.items()):
             text = re.sub(r'\bDEFCLK{}\b'.format(idx+1), str(val["value"]), text)
