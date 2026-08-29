@@ -27,30 +27,27 @@ else:
     print(f"✅ Sucesso! '{collection_code}' mapeado para: {collection_name}")
 
 
-search_url = f"https://hcunits.net/api/v1/units/?ext=json&set_id={collection_code}"
+# --- CORREÇÃO: A API mudou. Agora a listagem de unidades de um set
+# vem toda de uma vez em /api/v1/sets/{set_id}/, dentro da chave "unit_list",
+# em vez de /api/v1/units/?set_id={set_id} paginado em "results".
+search_url = f"https://hcunits.net/api/v1/sets/{collection_code}/?ext=json"
 print(f"Buscando unidades da coleção {collection_code}...")
 
-character_ids = []
+response = requests.get(search_url)
 
-# Fetch all units from the API with pagination
-while search_url:
-    response = requests.get(search_url)
-    
-    if response.status_code != 200:
-        print(f"Erro ao acessar a API: Status {response.status_code}")
-        exit()
-    
-    data = response.json()
-    
-    if isinstance(data, dict) and 'results' in data:
-        character_ids.extend([u['id'] for u in data['results']])
-        search_url = data.get('next')
-    elif isinstance(data, list):
-        character_ids.extend([u['id'] for u in data])
-        search_url = None
-    else:
-        print("Formato de resposta inesperado ou nenhum resultado encontrado.")
-        exit()
+if response.status_code != 200:
+    print(f"Erro ao acessar a API: Status {response.status_code}")
+    exit()
+
+data = response.json()
+
+all_units = data.get('unit_list', [])
+
+if not all_units:
+    print(f"Nenhuma unidade encontrada para a coleção '{collection_code}'. Verifique se o código está correto.")
+    exit()
+
+character_ids = [u['id'] for u in all_units]
 
 print(f"Total de personagens encontrados: {len(character_ids)}")
 
