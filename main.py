@@ -24,6 +24,12 @@ if not collection_name:
 else:
     print(f"✅ Sucesso! '{collection_code}' mapeado para: {collection_name}")
 
+# Ensure output folder structure exists: root/tts-units/<collection_name>/
+tts_root_dir = os.path.join(current_dir, "tts-units")
+os.makedirs(tts_root_dir, exist_ok=True)
+collection_dir = os.path.join(tts_root_dir, collection_name.strip())
+os.makedirs(collection_dir, exist_ok=True)
+
 # --- CORREÇÃO: A API mudou. Agora a listagem de unidades de um set
 # vem toda de uma vez em /api/v1/sets/{set_id}/, dentro da chave "unit_list",
 # em vez de /api/v1/units/?set_id={set_id} paginado em "results".
@@ -169,8 +175,9 @@ for id in character_ids[starting_position:]:
             text = re.sub(r'\bDAMCOLOR{}\b'.format(idx+1), val["background_color"], text)
             text = re.sub(r'\bDAMTEXTCOLOR{}\b'.format(idx+1), val["text_contrast_color"], text)
 
-        # Save character file locally
-        with open(f"{characterinfo['FIGURENAME']}.json", 'w') as f:
+        # Save character file locally inside the collection folder
+        output_path = os.path.join(collection_dir, f"{characterinfo['FIGURENAME']}.json")
+        with open(output_path, 'w', encoding='utf-8') as f:
             f.write(text)
 
     # Handle exceptions

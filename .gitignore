@@ -3,3 +3,5 @@ __pycache__
 *.png
 card-images/*
 !card-images/.gitkeep
+tts-units/*
+!tts-units/.gitkeep
