@@ -112,6 +112,11 @@ hcuteams_to_ttsteams = {
     'united_federation': 'unitedfederationofplanets',
     'snowfall': 'snowfall',
     'wwe': 'wwe',
+    'gi_joe': 'gijoe',
+    'cobra': 'cobra',
+    'underdark': 'underdark',
+    'adventurer': 'adventurer',
+    'horde': 'horde',
 }
 
 power_to_color = {
